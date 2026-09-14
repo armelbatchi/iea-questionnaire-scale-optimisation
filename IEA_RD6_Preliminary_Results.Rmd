@@ -1,0 +1,1537 @@
+---
+title: "Preliminary Results"
+subtitle: "Optimising IEA Questionnaire Scales for Length and Comparability"
+author: "Armel Landry Batchi-Bouyou"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: false
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  fig.retina = 2, dpi = 300
+)
+
+options(timeout = 3600, scipen = 999)
+
+pkgs <- c(
+  "dplyr", "tidyr", "purrr", "stringr", "ggplot2", "scales",
+  "forcats", "readr", "tibble", "haven", "knitr"
+)
+to_install <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
+if (length(to_install)) {
+  install.packages(to_install, repos = "https://cloud.r-project.org")
+}
+invisible(lapply(pkgs, library, character.only = TRUE))
+
+theme_pub <- function(base_size = 11) {
+  theme_minimal(base_size = base_size) %+replace%
+    theme(
+      text = element_text(family = "sans", colour = "grey18"),
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title.position = "plot",
+      plot.caption.position = "plot",
+      plot.title = element_text(
+        size = rel(1.28), face = "bold", hjust = 0,
+        margin = margin(b = 5)
+      ),
+      plot.subtitle = element_text(
+        size = rel(0.92), colour = "grey35", hjust = 0,
+        margin = margin(b = 14)
+      ),
+      plot.caption = element_text(
+        size = rel(0.74), colour = "grey42", hjust = 0,
+        margin = margin(t = 10)
+      ),
+      axis.title = element_text(size = rel(0.96), face = "bold", colour = "grey28"),
+      axis.text = element_text(size = rel(0.86), colour = "grey28"),
+      strip.text = element_text(size = rel(0.95), face = "bold", colour = "grey18"),
+      strip.background = element_rect(fill = "grey96", colour = NA),
+      panel.grid.major = element_line(colour = "grey90", linewidth = 0.35),
+      panel.grid.minor = element_blank(),
+      legend.title = element_text(face = "bold"),
+      legend.text = element_text(size = rel(0.88)),
+      panel.spacing = grid::unit(14, "pt"),
+      plot.margin = margin(14, 18, 14, 14)
+    )
+}
+theme_set(theme_pub())
+
+# Display-only helpers. They do not alter any estimates.
+panel_label <- function(study, scale_var) {
+  paste(study, scale_var, sep = "\n")
+}
+
+pretty_system_id <- function(x) {
+  z <- toupper(trimws(as.character(x)))
+
+  # ICILS country-file IDs, e.g. BSGUSAI3 -> USA
+  z <- ifelse(
+    grepl("^BSG[A-Z0-9]{3}I3$", z),
+    sub("^BSG([A-Z0-9]{3})I3$", "\\1", z),
+    z
+  )
+
+  # TIMSS Grade 8 country-file IDs, e.g. BSGSWE M8 -> SWE
+  z <- ifelse(
+    grepl("^BSG[A-Z0-9]{3}M8$", z),
+    sub("^BSG([A-Z0-9]{3})M8$", "\\1", z),
+    z
+  )
+
+  # PIRLS IDs preserve the A/R suffix because both versions can occur
+  # for the same three-character system code.
+  z <- ifelse(
+    grepl("^ASG[A-Z0-9]{3}[AR]5$", z),
+    sub("^ASG([A-Z0-9]{3})([AR])5$", "\\1-\\2", z),
+    z
+  )
+
+  z
+}
+
+save_figure <- function(plot, stem, width, height) {
+  ggsave(
+    file.path(out_dir, paste0(stem, ".png")),
+    plot = plot, width = width, height = height, dpi = 320,
+    bg = "white", limitsize = FALSE
+  )
+  ggsave(
+    file.path(out_dir, paste0(stem, ".pdf")),
+    plot = plot, width = width, height = height,
+    bg = "white", limitsize = FALSE
+  )
+}
+
+# -----------------------------------------------------------------------------
+# USER SETTINGS
+# -----------------------------------------------------------------------------
+# Running this script with DOWNLOAD_DATA = TRUE accesses the public IEA data
+# repositories. Keep ACCEPT_IEA_TERMS = TRUE only if you have read and accepted
+# the repository terms and licence conditions.
+ACCEPT_IEA_TERMS <- TRUE
+DOWNLOAD_DATA    <- FALSE
+FORCE_REBUILD    <- FALSE
+SEED             <- 20260914
+CORR_TARGET      <- 0.95
+MIN_ITEM_PROP    <- 0.80
+
+# This corrected run is intentionally offline. Existing files in data_unzipped/
+# are reused; if an unpacked study folder is missing but its ZIP is already in
+# data_raw/, the ZIP is unpacked locally. No large archive is downloaded.
+
+raw_dir   <- "data_raw"
+data_dir  <- "data_unzipped"
+cache_dir <- "intermediate"
+out_dir   <- "outputs"
+dir.create(raw_dir,   showWarnings = FALSE, recursive = TRUE)
+dir.create(data_dir,  showWarnings = FALSE, recursive = TRUE)
+dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(out_dir,   showWarnings = FALSE, recursive = TRUE)
+
+if (DOWNLOAD_DATA && !ACCEPT_IEA_TERMS) {
+  stop("Set ACCEPT_IEA_TERMS <- TRUE after reading the IEA repository terms, or set DOWNLOAD_DATA <- FALSE and place the data locally.")
+}
+
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0L) y else x
+```
+
+# Analysis plan used in this preliminary run
+
+This document creates the six exhibits specified for the Tier 1 application. It uses one student questionnaire scale from each of ICILS 2023, TIMSS 2023 Grade 8, PIRLS 2021 and ICCS 2022 as a computationally manageable demonstration set. The preliminary item reduction is deliberately simple: items are ranked in calibration systems by their weighted association with the official full scale, and candidate subsets are evaluated in held-out systems. This is a feasibility analysis, not the final constrained optimisation procedure described in the proposal.
+
+**Codebook-verified revision:** The scale registry has been checked against the uploaded 2023 TIMSS Grade 8, 2021 PIRLS, 2023 ICILS and 2022 ICCS codebooks. TIMSS uses BSBM19A and BSBM19D-I; PIRLS uses ASBR07A-H plus ASBR06A-B, matching the ten source items used for Students Like Reading. This revision uses a new prepared-data cache suffix and is set not to download the large public-use archives again.
+
+```{r registry}
+# -----------------------------------------------------------------------------
+# STUDY AND SCALE REGISTRY
+# -----------------------------------------------------------------------------
+# Each item has:
+#   candidates    likely variable names in the public-use database
+#   label_pattern fallback text used to identify the item from its variable label
+#   reverse       TRUE only when higher raw response codes indicate more construct
+#                 after reverse scoring (e.g., "reading is boring")
+#
+# All item responses below have four ordered categories. recode_four() converts
+# them to 0-3 with higher values = more of the named construct.
+
+make_item <- function(candidates, label_pattern, reverse = FALSE) {
+  tibble(
+    candidates = paste(candidates, collapse = "|"),
+    label_pattern = label_pattern,
+    reverse = reverse
+  )
+}
+
+scale_registry <- list(
+  ICILS2023 = list(
+    study = "ICILS 2023",
+    respondent = "Student",
+    scale_var = "S_LRNINTO",
+    scale_name = "Learning about internet-related tasks outside school",
+    file_prefix = "BSG",
+    achievement_prefix = "BSA",
+    weight_candidates = c("TOTWGTS", "TOTWGT"),
+    zone_candidates = c("JKZONES", "JKZONE"),
+    rep_candidates = c("JKREPS", "JKREP"),
+    country_candidates = c("IDCNTRY", "CNTRY", "COUNTRY"),
+    pv_regex = "^PV[1-5]CIL$",
+    pv_label = "CIL achievement",
+    items = bind_rows(
+      make_item(c("IS3G20AA2"), "internet.*find.*information"),
+      make_item(c("IS3G20AB2"), "refine.*internet.*search"),
+      make_item(c("IS3G20AC2"), "evaluate.*reliability.*information"),
+      make_item(c("IS3G20AD2"), "accurate.*references.*internet.*sources"),
+      make_item(c("IS3G20AE2"), "message.*scam|judge.*scam"),
+      make_item(c("IS3G20AF2"), "manage.*privacy.*settings")
+    )
+  ),
+
+  TIMSS2023 = list(
+    study = "TIMSS 2023 Grade 8",
+    respondent = "Student",
+    scale_var = "BSBGSLM",
+    scale_name = "Students Like Learning Mathematics",
+    file_prefix = "BSG",
+    achievement_prefix = "BSA",
+    weight_candidates = c("TOTWGT", "TOTWGTS"),
+    zone_candidates = c("JKZONE", "JKZONES"),
+    rep_candidates = c("JKREP", "JKREPS"),
+    country_candidates = c("IDCNTRY", "CNTRY", "COUNTRY"),
+    pv_regex = "^BSMMAT0[1-5]$",
+    pv_label = "Mathematics achievement",
+    # Codebook-verified TIMSS 2023 Grade 8 variables. BSBGSLM is represented
+    # here by the seven positively worded SQM-19 items. The two negatively
+    # worded SQM-19 items (BSBM19B and BSBM19C) are not used in this
+    # preliminary short-form demonstration.
+    items = bind_rows(
+      make_item(c("BSBM19A"), "enjoy.*learning.*mathemat"),
+      make_item(c("BSBM19D"), "learn.*interesting.*things"),
+      make_item(c("BSBM19E"), "like.*mathemat"),
+      make_item(c("BSBM19F"), "like.*numbers"),
+      make_item(c("BSBM19G"), "like.*math.*problems"),
+      make_item(c("BSBM19H"), "look.*forward.*math.*class"),
+      make_item(c("BSBM19I"), "favorite.*subject|favourite.*subject")
+    )
+  ),
+
+  PIRLS2021 = list(
+    study = "PIRLS 2021",
+    respondent = "Student",
+    scale_var = "ASBGSLR",
+    scale_name = "Students Like Reading",
+    file_prefix = "ASG",
+    achievement_prefix = "ASA",
+    weight_candidates = c("TOTWGT", "TOTWGTS"),
+    zone_candidates = c("JKZONE", "JKZONES"),
+    rep_candidates = c("JKREP", "JKREPS"),
+    country_candidates = c("IDCNTRY", "CNTRY", "COUNTRY"),
+    pv_regex = "^ASRREA0[1-5]$",
+    pv_label = "Reading achievement",
+    # Codebook-verified PIRLS 2021 Students Like Reading source items.
+    # The scale combines eight four-category agreement items (ASBR07A-H)
+    # with two four-category outside-school reading-frequency items
+    # (ASBR06A-B). ASBR07C is negatively worded and reverse scored.
+    items = bind_rows(
+      make_item(c("ASBR07A"), "talking.*what.*read|talk.*what.*read"),
+      make_item(c("ASBR07B"), "happy.*book.*present|book.*present"),
+      make_item(c("ASBR07C"), "reading.*boring", reverse = TRUE),
+      make_item(c("ASBR07D"), "more time.*reading"),
+      make_item(c("ASBR07E"), "enjoy.*reading"),
+      make_item(c("ASBR07F"), "learn.*lot.*reading"),
+      make_item(c("ASBR07G"), "read.*things.*think|things.*make.*think"),
+      make_item(c("ASBR07H"), "book.*helps.*imag|imagine.*other.*world"),
+      make_item(c("ASBR06A"), "read.*for fun"),
+      make_item(c("ASBR06B"), "read.*to learn|read.*learn")
+    )
+  ),
+
+  ICCS2022 = list(
+    study = "ICCS 2022",
+    respondent = "Student",
+    scale_var = "S_CITEFF",
+    scale_name = "Students' Citizenship Self-Efficacy",
+    file_prefix = "ISG",
+    achievement_prefix = "ISA",
+    weight_candidates = c("TOTWGTS", "TOTWGT"),
+    zone_candidates = c("JKZONES", "JKZONE"),
+    rep_candidates = c("JKREPS", "JKREP"),
+    country_candidates = c("COUNTRY", "IDCNTRY", "CNTRY"),
+    pv_regex = "^PV[1-5]CIV$",
+    pv_label = "Civic knowledge",
+    items = bind_rows(
+      make_item(c("IS4G29A"), "argue.*point.*view.*controvers"),
+      make_item(c("IS4G29B"), "candidate.*school.*election|stand.*candidate"),
+      make_item(c("IS4G29C"), "organise.*group.*students|organize.*group.*students"),
+      make_item(c("IS4G29D"), "follow.*debate.*controvers"),
+      make_item(c("IS4G29E"), "letter|email.*newspaper|newspaper.*view"),
+      make_item(c("IS4G29F"), "speak.*front.*class.*social|political.*issue"),
+      make_item(c("IS4G29G"), "credibility.*information|assess.*credib")
+    )
+  )
+)
+
+study_downloads <- tibble::tribble(
+  ~key,         ~zip_name,                    ~url,
+  "ICILS2023", "ICILS2023_IDB_R.zip",        "https://www.iea.nl/sites/default/files/data-repository/ICILS/ICILS2023/ICILS2023_IDB_R.zip",
+  "TIMSS2023", "TIMSS2023_IDB_R_G8.zip",     "https://www.iea.nl/sites/default/files/data-repository/TIMSS/TIMSS2023/TIMSS2023_IDB_R_G8.zip",
+  "PIRLS2021", "PIRLS2021_IDB_R.zip",        "https://www.iea.nl/sites/default/files/data-repository/PIRLS/PIRLS2021/PIRLS2021_IDB_R.zip",
+  "ICCS2022",  "ICCS2022_IDB_R.zip",         "https://www.iea.nl/sites/default/files/data-repository/ICCS/ICCS2022/ICCS2022_IDB_R.zip"
+)
+```
+
+# Download and unpack the public-use data
+
+```{r download-data}
+download_and_unzip <- function(key, zip_name, url) {
+  dest_zip <- file.path(raw_dir, zip_name)
+  dest_dir <- file.path(data_dir, key)
+
+  if (!dir.exists(dest_dir) || FORCE_REBUILD) {
+    dir.create(dest_dir, showWarnings = FALSE, recursive = TRUE)
+  }
+
+  rdata_existing <- list.files(dest_dir, pattern = "\\.(RData|rda)$",
+                               recursive = TRUE, full.names = TRUE,
+                               ignore.case = TRUE)
+  if (length(rdata_existing) > 0 && !FORCE_REBUILD) {
+    message(key, ": already unpacked (", length(rdata_existing), " R data files).")
+    return(invisible(dest_dir))
+  }
+
+  if (!file.exists(dest_zip)) {
+    if (!DOWNLOAD_DATA) {
+      stop(
+        "Missing ", dest_zip,
+        ". Download the official R-format data archive and place it in data_raw/, or set DOWNLOAD_DATA    <- FALSE."
+      )
+    }
+    message("Downloading ", key, " ...")
+    tryCatch(
+      download.file(url, destfile = dest_zip, mode = "wb", method = "libcurl", quiet = FALSE),
+      error = function(e) {
+        stop(
+          "Automatic download failed for ", key, ".\n",
+          "Download the R-format archive manually from the IEA data repository, save it as:\n  ",
+          dest_zip, "\nThen rerun the document.\nOriginal error: ", conditionMessage(e)
+        )
+      }
+    )
+  }
+
+  message("Unpacking ", basename(dest_zip), " ...")
+  unzip(dest_zip, exdir = dest_dir)
+  invisible(dest_dir)
+}
+
+pwalk(study_downloads, download_and_unzip)
+```
+
+# Helper functions
+
+```{r helpers}
+# -----------------------------------------------------------------------------
+# FILE AND VARIABLE HELPERS
+# -----------------------------------------------------------------------------
+
+load_rdata_frame <- function(path) {
+  e <- new.env(parent = baseenv())
+  objs <- load(path, envir = e)
+  is_df <- vapply(objs, function(nm) inherits(e[[nm]], "data.frame"), logical(1))
+  if (!any(is_df)) {
+    stop("No data.frame-like object found in: ", path)
+  }
+  obj <- e[[objs[which(is_df)[1]]]]
+  as.data.frame(obj)
+}
+
+first_existing <- function(nms, candidates) {
+  hit <- candidates[candidates %in% nms]
+  if (length(hit)) hit[1] else NA_character_
+}
+
+var_label <- function(x) {
+  lab <- attr(x, "label", exact = TRUE)
+  if (is.null(lab)) "" else as.character(lab)[1]
+}
+
+find_by_label <- function(df, regex) {
+  labs <- vapply(df, var_label, character(1))
+  hits <- names(labs)[grepl(regex, labs, ignore.case = TRUE, perl = TRUE)]
+  hits
+}
+
+resolve_items <- function(df, item_specs, study_name) {
+  out <- character(nrow(item_specs))
+  for (i in seq_len(nrow(item_specs))) {
+    candidates <- strsplit(item_specs$candidates[i], "\\|", fixed = FALSE)[[1]]
+    direct <- candidates[candidates %in% names(df)]
+    if (length(direct)) {
+      out[i] <- direct[1]
+      next
+    }
+
+    hits <- find_by_label(df, item_specs$label_pattern[i])
+    if (length(hits) == 1L) {
+      out[i] <- hits
+    } else if (length(hits) > 1L) {
+      stop(
+        study_name, ": more than one variable matched the label pattern for item ", i,
+        ": ", paste(hits, collapse = ", "),
+        ". Add the exact variable name to scale_registry."
+      )
+    } else {
+      stems <- unique(substr(candidates, 1, pmin(4L, nchar(candidates))))
+      near <- names(df)[vapply(names(df), function(nm) any(startsWith(toupper(nm), toupper(stems))), logical(1))]
+      near <- head(near, 40)
+      stop(
+        study_name, ": could not locate item ", i, ". Tried variable name(s) ",
+        paste(candidates, collapse = ", "), " and label pattern: ",
+        item_specs$label_pattern[i],
+        if (length(near)) paste0(". Nearby variables include: ", paste(near, collapse = ", ")) else "",
+        ". Inspect the study codebook only if the exact variables above are absent from your edition."
+      )
+    }
+  }
+  out
+}
+
+as_numeric_iea <- function(x) {
+  if (inherits(x, "haven_labelled_spss")) x <- haven::zap_missing(x)
+  if (inherits(x, "haven_labelled")) x <- haven::zap_labels(x)
+  if (is.factor(x)) {
+    z <- suppressWarnings(as.numeric(as.character(x)))
+    if (all(is.na(z)) && any(!is.na(x))) z <- as.numeric(x)
+    return(z)
+  }
+  suppressWarnings(as.numeric(x))
+}
+
+country_as_character <- function(x) {
+  if (inherits(x, "haven_labelled") || inherits(x, "haven_labelled_spss")) {
+    z <- tryCatch(as.character(haven::as_factor(x, levels = "labels")), error = function(e) NULL)
+    if (!is.null(z)) return(z)
+  }
+  as.character(x)
+}
+
+recode_four <- function(x, reverse = FALSE) {
+  z <- as_numeric_iea(x)
+  z[!z %in% 1:4] <- NA_real_
+  if (reverse) {
+    # 1,2,3,4 -> 0,1,2,3
+    z - 1
+  } else {
+    # 1,2,3,4 -> 3,2,1,0
+    4 - z
+  }
+}
+
+weighted_mean <- function(x, w) {
+  ok <- is.finite(x) & is.finite(w) & w > 0
+  if (!any(ok)) return(NA_real_)
+  sum(x[ok] * w[ok]) / sum(w[ok])
+}
+
+weighted_cor <- function(x, y, w) {
+  ok <- is.finite(x) & is.finite(y) & is.finite(w) & w > 0
+  if (sum(ok) < 3) return(NA_real_)
+  x <- x[ok]; y <- y[ok]; w <- w[ok]
+  w <- w / sum(w)
+  mx <- sum(w * x); my <- sum(w * y)
+  vx <- sum(w * (x - mx)^2)
+  vy <- sum(w * (y - my)^2)
+  if (vx <= 0 || vy <= 0) return(NA_real_)
+  sum(w * (x - mx) * (y - my)) / sqrt(vx * vy)
+}
+
+weighted_lm_coef <- function(y, x, w) {
+  ok <- is.finite(y) & is.finite(x) & is.finite(w) & w > 0
+  if (sum(ok) < 5) return(c(intercept = NA_real_, slope = NA_real_))
+  fit <- lm(y[ok] ~ x[ok], weights = w[ok])
+  c(intercept = unname(coef(fit)[1]), slope = unname(coef(fit)[2]))
+}
+
+row_mean_minprop <- function(mat, min_prop = MIN_ITEM_PROP) {
+  mat <- as.matrix(mat)
+  n_ok <- rowSums(is.finite(mat))
+  need <- pmax(1L, ceiling(ncol(mat) * min_prop))
+  ans <- rowMeans(mat, na.rm = TRUE)
+  ans[n_ok < need] <- NA_real_
+  ans[!is.finite(ans)] <- NA_real_
+  ans
+}
+
+equal_system_weights <- function(system, w) {
+  out <- rep(NA_real_, length(w))
+  for (s in unique(system)) {
+    idx <- which(system == s & is.finite(w) & w > 0)
+    if (length(idx)) out[idx] <- w[idx] / sum(w[idx])
+  }
+  out
+}
+
+find_context_files <- function(root, prefix) {
+  all <- list.files(root, pattern = "\\.(RData|rda)$", recursive = TRUE,
+                    full.names = TRUE, ignore.case = TRUE)
+  all[startsWith(toupper(basename(all)), toupper(prefix))]
+}
+
+swap_file_prefix <- function(path, from, to) {
+  b <- basename(path)
+  if (!startsWith(toupper(b), toupper(from))) return(NA_character_)
+  target_b <- paste0(to, substring(b, nchar(from) + 1L))
+  siblings <- list.files(dirname(path), pattern = "\\.(RData|rda)$", full.names = TRUE,
+                         ignore.case = TRUE)
+  hit <- siblings[tolower(basename(siblings)) == tolower(target_b)]
+  if (length(hit)) hit[1] else NA_character_
+}
+
+merge_pvs_if_needed <- function(df, context_file, cfg) {
+  pvs <- grep(cfg$pv_regex, names(df), value = TRUE, perl = TRUE)
+  if (length(pvs) >= 5L) return(df)
+
+  companion <- swap_file_prefix(context_file, cfg$file_prefix, cfg$achievement_prefix)
+  if (is.na(companion) || !file.exists(companion)) {
+    return(df)
+  }
+
+  ach <- load_rdata_frame(companion)
+  pvs_ach <- grep(cfg$pv_regex, names(ach), value = TRUE, perl = TRUE)
+  if (!length(pvs_ach)) return(df)
+
+  possible_keys <- c("IDCNTRY", "COUNTRY", "CNTRY", "IDSCHOOL", "IDCLASS", "IDSTUD")
+  keys <- possible_keys[possible_keys %in% names(df) & possible_keys %in% names(ach)]
+  if ("IDSTUD" %in% keys) {
+    country_key <- keys[keys %in% c("IDCNTRY", "COUNTRY", "CNTRY")][1] %||% character(0)
+    keys <- unique(c(country_key, "IDSTUD"))
+  }
+  keys <- keys[!is.na(keys)]
+  if (!length(keys)) return(df)
+
+  ach_small <- ach[, unique(c(keys, pvs_ach)), drop = FALSE]
+  dplyr::left_join(df, ach_small, by = keys)
+}
+
+# -----------------------------------------------------------------------------
+# REPLICATE-WEIGHT / JRR HELPERS
+# -----------------------------------------------------------------------------
+# For the standard IEA paired-zone JRR setup, a replicate for zone h assigns
+# weight 0 to JKREP==0 and doubles JKREP==1 in zone h, leaving other zones
+# unchanged. The sampling variance is the sum of squared replicate deviations.
+
+make_jrr_weight <- function(w, zone, repcode, h) {
+  wr <- w
+  in_h <- !is.na(zone) & zone == h
+  wr[in_h & repcode == 0] <- 0
+  wr[in_h & repcode == 1] <- 2 * w[in_h & repcode == 1]
+  wr
+}
+
+jrr_se_scalar <- function(w, zone, repcode, statistic_fun) {
+  main <- statistic_fun(w)
+  zones <- sort(unique(zone[is.finite(zone)]))
+  if (!length(zones) || !is.finite(main)) return(c(estimate = main, se = NA_real_))
+  reps <- vapply(zones, function(h) statistic_fun(make_jrr_weight(w, zone, repcode, h)), numeric(1))
+  se <- sqrt(sum((reps - main)^2, na.rm = TRUE))
+  c(estimate = main, se = se)
+}
+
+# Efficient JRR for many binary omission indicators at once.
+jrr_binary_rates <- function(omit_mat, eligible_mat, w, zone, repcode) {
+  omit_mat <- as.matrix(omit_mat) * 1
+  eligible_mat <- as.matrix(eligible_mat) * 1
+  w <- as.numeric(w)
+  zone <- as.numeric(zone)
+  repcode <- as.numeric(repcode)
+
+  A <- colSums(omit_mat * w, na.rm = TRUE)
+  B <- colSums(eligible_mat * w, na.rm = TRUE)
+  main <- A / B
+
+  zones <- sort(unique(zone[is.finite(zone)]))
+  rep_est <- matrix(NA_real_, nrow = length(zones), ncol = ncol(omit_mat))
+
+  for (r in seq_along(zones)) {
+    h <- zones[r]
+    i0 <- which(zone == h & repcode == 0)
+    i1 <- which(zone == h & repcode == 1)
+
+    A0 <- if (length(i0)) colSums(omit_mat[i0, , drop = FALSE] * w[i0], na.rm = TRUE) else rep(0, ncol(omit_mat))
+    A1 <- if (length(i1)) colSums(omit_mat[i1, , drop = FALSE] * w[i1], na.rm = TRUE) else rep(0, ncol(omit_mat))
+    B0 <- if (length(i0)) colSums(eligible_mat[i0, , drop = FALSE] * w[i0], na.rm = TRUE) else rep(0, ncol(omit_mat))
+    B1 <- if (length(i1)) colSums(eligible_mat[i1, , drop = FALSE] * w[i1], na.rm = TRUE) else rep(0, ncol(omit_mat))
+
+    rep_est[r, ] <- (A - A0 + A1) / (B - B0 + B1)
+  }
+
+  se <- sqrt(colSums((sweep(rep_est, 2, main, "-"))^2, na.rm = TRUE))
+  tibble(rate = main, se = se)
+}
+
+# -----------------------------------------------------------------------------
+# MISSING / OMITTED RESPONSE HELPERS FOR FIGURE S2
+# -----------------------------------------------------------------------------
+value_label_codes <- function(x, regex) {
+  labs <- attr(x, "labels", exact = TRUE)
+  if (is.null(labs) || is.null(names(labs))) return(numeric(0))
+  unname(labs[grepl(regex, names(labs), ignore.case = TRUE, perl = TRUE)])
+}
+
+is_labelled_category <- function(x, regex) {
+  if (is.factor(x)) {
+    ch <- as.character(x)
+    return(grepl(regex, ch, ignore.case = TRUE, perl = TRUE))
+  }
+  codes <- value_label_codes(x, regex)
+  z <- suppressWarnings(as.numeric(x))
+  if (length(codes)) return(z %in% codes)
+  rep(FALSE, length(x))
+}
+
+omission_and_eligibility <- function(x) {
+  omitted <- is_labelled_category(x, "omit")
+  not_admin <- is_labelled_category(x, "not administered|not applicable|not reached|not available")
+
+  # When the R object carries user-defined missing values, zap them after
+  # distinguishing explicit omitted/not-administered categories above.
+  z <- x
+  if (inherits(z, "haven_labelled_spss")) z <- haven::zap_missing(z)
+
+  # If no explicit omission label is present, treat ordinary NA as omission,
+  # but only for variables/countries that are demonstrably administered.
+  if (!any(omitted, na.rm = TRUE)) {
+    omitted <- is.na(z) & !not_admin
+  }
+
+  eligible <- !not_admin
+  list(omitted = omitted & eligible, eligible = eligible)
+}
+```
+
+# Prepare the four demonstration scales
+
+```{r prepare-scale-data}
+prepare_one_scale <- function(key, cfg) {
+  cache_file <- file.path(cache_dir, paste0(key, "_prepared_v3.rds"))
+
+  # Reuse a cache only if it contains at least two distinct usable systems.
+  # This catches the TIMSS cache from the previous run, where country identifiers
+  # collapsed and therefore no held-out validation systems were available.
+  if (file.exists(cache_file) && !FORCE_REBUILD) {
+    cached <- readRDS(cache_file)
+    cached_systems <- cached$data$system
+    cached_systems <- trimws(as.character(cached_systems))
+    cached_systems <- cached_systems[!is.na(cached_systems) & nzchar(cached_systems)]
+    if (dplyr::n_distinct(cached_systems) >= 2L) {
+      message("Loading valid cache: ", cache_file,
+              " (", dplyr::n_distinct(cached_systems), " systems)")
+      return(cached)
+    }
+    message("Ignoring invalid cache for ", cfg$study,
+            ": fewer than two distinct systems. Rebuilding from local unpacked data.")
+  }
+
+  root <- file.path(data_dir, key)
+  files <- find_context_files(root, cfg$file_prefix)
+  if (!length(files)) stop("No ", cfg$file_prefix, " RData files found under ", root)
+
+  resolved_items <- NULL
+  pieces <- list()
+
+  for (f in files) {
+    d <- tryCatch(load_rdata_frame(f), error = function(e) NULL)
+    if (is.null(d) || !cfg$scale_var %in% names(d)) next
+
+    d <- merge_pvs_if_needed(d, f, cfg)
+
+    country_var <- first_existing(names(d), cfg$country_candidates)
+    weight_var  <- first_existing(names(d), cfg$weight_candidates)
+    zone_var    <- first_existing(names(d), cfg$zone_candidates)
+    rep_var     <- first_existing(names(d), cfg$rep_candidates)
+    pvs         <- grep(cfg$pv_regex, names(d), value = TRUE, perl = TRUE)
+
+    if (is.na(country_var) || is.na(weight_var) || is.na(zone_var) || is.na(rep_var)) {
+      stop(cfg$study, ": required country/weight/JRR variable missing in ", basename(f))
+    }
+    if (length(pvs) < 5L) {
+      stop(
+        cfg$study, ": could not locate five achievement plausible values matching ",
+        cfg$pv_regex, " in ", basename(f),
+        " or its achievement companion file."
+      )
+    }
+    pvs <- pvs[seq_len(5)]
+
+    if (is.null(resolved_items)) {
+      resolved_items <- resolve_items(d, cfg$items, cfg$study)
+      message(cfg$study, " item variables: ", paste(resolved_items, collapse = ", "))
+    }
+
+    needed <- unique(c(country_var, weight_var, zone_var, rep_var,
+                       cfg$scale_var, resolved_items, pvs))
+    small <- d[, needed, drop = FALSE]
+
+    sys_raw <- trimws(country_as_character(small[[country_var]]))
+    file_system <- tools::file_path_sans_ext(basename(f))
+
+    out <- tibble(
+      system = sys_raw,
+      source_file_system = file_system,
+      weight = as_numeric_iea(small[[weight_var]]),
+      jkzone = as_numeric_iea(small[[zone_var]]),
+      jkrep  = as_numeric_iea(small[[rep_var]]),
+      full_scale = as_numeric_iea(small[[cfg$scale_var]])
+    )
+
+    for (i in seq_along(resolved_items)) {
+      out[[sprintf("item%02d", i)]] <- recode_four(
+        small[[resolved_items[i]]],
+        reverse = cfg$items$reverse[i]
+      )
+    }
+    for (j in seq_along(pvs)) {
+      out[[sprintf("pv%02d", j)]] <- as_numeric_iea(small[[pvs[j]]])
+    }
+
+    out <- out %>% filter(is.finite(weight), weight > 0, is.finite(full_scale))
+    if (nrow(out)) pieces[[length(pieces) + 1L]] <- out
+  }
+
+  if (!length(pieces)) stop("No usable country files found for ", cfg$study)
+  dat <- bind_rows(pieces)
+
+  # Normalise country/system identifiers.
+  dat$system <- trimws(as.character(dat$system))
+  bad_system <- is.na(dat$system) | !nzchar(dat$system) |
+    toupper(dat$system) %in% c("NA", "N/A", "NULL")
+  dat$system[bad_system] <- NA_character_
+
+  n_system_ids <- dplyr::n_distinct(dat$system[!is.na(dat$system)])
+  n_source_files <- dplyr::n_distinct(dat$source_file_system)
+
+  # Some TIMSS public-use country files do not yield a usable labelled country
+  # identifier through haven. If that collapses all records into one system,
+  # use the country-specific file names as stable system IDs instead.
+  if (n_system_ids < 2L && n_source_files >= 2L) {
+    message(
+      cfg$study, ": country identifier yielded only ", n_system_ids,
+      " usable system(s); using ", n_source_files,
+      " country-file identifiers for calibration/validation splitting."
+    )
+    dat$system <- dat$source_file_system
+  }
+
+  # Final guard: held-out validation requires at least two systems.
+  final_n_systems <- dplyr::n_distinct(dat$system[!is.na(dat$system) & nzchar(dat$system)])
+  if (final_n_systems < 2L) {
+    stop(
+      cfg$study, ": only ", final_n_systems,
+      " distinct system identifier(s) remain after preparation. ",
+      "Held-out cross-system validation requires at least two."
+    )
+  }
+
+  dat$source_file_system <- NULL
+
+  ans <- list(
+    key = key,
+    cfg = cfg,
+    data = dat,
+    item_vars = resolved_items,
+    item_cols = grep("^item[0-9]+$", names(dat), value = TRUE),
+    pv_cols = grep("^pv[0-9]+$", names(dat), value = TRUE)
+  )
+
+  saveRDS(ans, cache_file)
+  message(cfg$study, ": prepared ", final_n_systems, " systems and saved cache.")
+  ans
+}
+
+prepared <- imap(scale_registry, ~ prepare_one_scale(.y, .x))
+```
+
+# Calibration, item ranking and held-out validation
+
+```{r preliminary-selection}
+country_summary <- function(dat) {
+  dat %>%
+    group_by(system) %>%
+    summarise(
+      n = sum(is.finite(full_scale) & is.finite(weight) & weight > 0),
+      full_mean = weighted_mean(full_scale, weight),
+      .groups = "drop"
+    ) %>%
+    filter(n > 0, is.finite(full_mean))
+}
+
+make_system_split <- function(dat, seed) {
+  s <- country_summary(dat) %>% arrange(full_mean)
+
+  if (nrow(s) < 2L) {
+    stop(
+      "Only ", nrow(s),
+      " usable system(s) were found. At least two are required for calibration/validation splitting."
+    )
+  }
+
+  set.seed(seed)
+  # Pair adjacent systems by the full-scale mean and randomly place one member
+  # of each pair into calibration and the other into validation.
+  s <- s %>% mutate(pair = ceiling(row_number() / 2))
+  s <- s %>%
+    group_by(pair) %>%
+    mutate(
+      set = if (n() == 1L) {
+        sample(c("Calibration", "Validation"), 1)
+      } else {
+        sample(c("Calibration", "Validation"), n())
+      }
+    ) %>%
+    ungroup()
+
+  # Ensure both groups always exist.
+  if (!all(c("Calibration", "Validation") %in% s$set)) {
+    s$set <- rep(c("Calibration", "Validation"), length.out = nrow(s))
+  }
+
+  s
+}
+
+analyse_one_scale <- function(prep, seed = SEED) {
+  dat <- prep$data
+  item_cols <- prep$item_cols
+  cfg <- prep$cfg
+  split <- make_system_split(dat, seed)
+  dat <- left_join(dat, split %>% select(system, set), by = "system")
+
+  cal <- dat %>% filter(set == "Calibration")
+  val <- dat %>% filter(set == "Validation")
+
+  if (!nrow(cal) || !nrow(val)) {
+    stop(
+      cfg$study, ": calibration/validation split failed. ",
+      "Calibration rows = ", nrow(cal), "; validation rows = ", nrow(val), "."
+    )
+  }
+
+  cal$eqw <- equal_system_weights(cal$system, cal$weight)
+  val$eqw <- equal_system_weights(val$system, val$weight)
+
+  # Rank items by absolute weighted correlation with the official full scale in
+  # calibration systems. This ranking is used only for preliminary feasibility.
+  rank_tbl <- tibble(
+    item_col = item_cols,
+    item_number = seq_along(item_cols),
+    item_source = prep$item_vars,
+    item_full_r = vapply(
+      item_cols,
+      function(v) abs(weighted_cor(cal[[v]], cal$full_scale, cal$eqw)),
+      numeric(1)
+    )
+  ) %>% arrange(desc(item_full_r), item_number)
+
+  ranked <- rank_tbl$item_col
+  m <- length(ranked)
+  k_values <- if (m <= 2) m else 2:m
+
+  curves <- vector("list", length(k_values))
+  candidate_models <- vector("list", length(k_values))
+
+  for (ii in seq_along(k_values)) {
+    k <- k_values[ii]
+    use <- ranked[seq_len(k)]
+
+    cal_raw <- row_mean_minprop(cal[, use, drop = FALSE])
+    coef_eq <- weighted_lm_coef(cal$full_scale, cal_raw, cal$eqw)
+
+    val_raw <- row_mean_minprop(val[, use, drop = FALSE])
+    val_short <- coef_eq["intercept"] + coef_eq["slope"] * val_raw
+    r_val <- weighted_cor(val_short, val$full_scale, val$eqw)
+
+    curves[[ii]] <- tibble(
+      study = cfg$study,
+      scale_var = cfg$scale_var,
+      scale_name = cfg$scale_name,
+      k = k,
+      n_full_items = m,
+      validation_r = r_val
+    )
+    candidate_models[[ii]] <- list(k = k, items = use, coef = coef_eq)
+  }
+
+  curve <- bind_rows(curves)
+  eligible <- curve %>% filter(k < n_full_items, is.finite(validation_r), validation_r >= CORR_TARGET)
+  if (nrow(eligible)) {
+    selected_k <- min(eligible$k)
+  } else {
+    # If no shortened candidate reaches the threshold, retain all items.
+    selected_k <- m
+  }
+
+  model_index <- match(selected_k, k_values)
+  if (is.na(model_index)) {
+    # Happens only for a one-item scale, not expected in this registry.
+    selected_items <- ranked
+    cal_raw <- row_mean_minprop(cal[, selected_items, drop = FALSE])
+    selected_coef <- weighted_lm_coef(cal$full_scale, cal_raw, cal$eqw)
+  } else {
+    selected_items <- candidate_models[[model_index]]$items
+    selected_coef <- candidate_models[[model_index]]$coef
+  }
+
+  # Produce fixed short-form scores using calibration coefficients.
+  dat_raw <- row_mean_minprop(dat[, selected_items, drop = FALSE])
+  dat$short_scale <- selected_coef["intercept"] + selected_coef["slope"] * dat_raw
+
+  selected_validation_r <- weighted_cor(
+    dat$short_scale[dat$set == "Validation"],
+    dat$full_scale[dat$set == "Validation"],
+    equal_system_weights(
+      dat$system[dat$set == "Validation"],
+      dat$weight[dat$set == "Validation"]
+    )
+  )
+
+  list(
+    prep = prep,
+    data = dat,
+    split = split,
+    ranking = rank_tbl,
+    curve = curve,
+    selected_k = selected_k,
+    selected_items = selected_items,
+    selected_source_items = prep$item_vars[match(selected_items, item_cols)],
+    coef = selected_coef,
+    validation_r = selected_validation_r
+  )
+}
+
+results <- imap(prepared, ~ analyse_one_scale(.x, SEED + match(.y, names(prepared))))
+
+curve_all <- map_dfr(results, "curve")
+readr::write_csv(curve_all, file.path(out_dir, "Figure_S3_validation_correlations.csv"))
+```
+
+# Table S1. Items per derived scale by study and respondent population
+
+```{r table-s1}
+table_s1 <- imap_dfr(results, function(res, key) {
+  cfg <- res$prep$cfg
+  tibble(
+    Study = cfg$study,
+    Respondent = cfg$respondent,
+    `Scale variable` = cfg$scale_var,
+    Scale = cfg$scale_name,
+    `Full items` = length(res$prep$item_cols),
+    `Preliminary short items` = res$selected_k,
+    `Items removed` = length(res$prep$item_cols) - res$selected_k,
+    `Reduction (%)` = 100 * (1 - res$selected_k / length(res$prep$item_cols)),
+    `Held-out r` = res$validation_r,
+    `Selected source items` = paste(res$selected_source_items, collapse = ", ")
+  )
+})
+
+readr::write_csv(table_s1, file.path(out_dir, "Table_S1_items_per_scale.csv"))
+
+table_s1_print <- table_s1 %>%
+  mutate(
+    `Reduction (%)` = sprintf("%.1f", `Reduction (%)`),
+    `Held-out r` = sprintf("%.3f", `Held-out r`)
+  )
+
+knitr::kable(
+  table_s1_print,
+  caption = "Table S1. Items per derived scale by study and respondent population.",
+  align = "llllrrrrrl"
+)
+```
+
+# Figure S2. Weighted item omission rate by position in the ICILS 2023 student questionnaire
+
+```{r figure-s2-data, cache=TRUE}
+prepare_icils_omission <- function() {
+  cache_file <- file.path(cache_dir, "ICILS2023_omission_by_position.rds")
+  if (file.exists(cache_file) && !FORCE_REBUILD) return(readRDS(cache_file))
+
+  cfg <- scale_registry$ICILS2023
+  root <- file.path(data_dir, "ICILS2023")
+  files <- find_context_files(root, cfg$file_prefix)
+  country_outputs <- list()
+  master_order <- NULL
+  master_labels <- NULL
+
+  for (f in files) {
+    d <- tryCatch(load_rdata_frame(f), error = function(e) NULL)
+    if (is.null(d)) next
+
+    country_var <- first_existing(names(d), cfg$country_candidates)
+    weight_var  <- first_existing(names(d), cfg$weight_candidates)
+    zone_var    <- first_existing(names(d), cfg$zone_candidates)
+    rep_var     <- first_existing(names(d), cfg$rep_candidates)
+    if (any(is.na(c(country_var, weight_var, zone_var, rep_var)))) next
+
+    raw_items <- names(d)[grepl("^IS3G", names(d), ignore.case = TRUE)]
+    if (!length(raw_items)) next
+
+    if (is.null(master_order)) {
+      master_order <- raw_items
+      master_labels <- vapply(d[raw_items], var_label, character(1))
+    }
+
+    # Keep the common order; variables absent in a national file are skipped.
+    items <- master_order[master_order %in% names(d)]
+    if (!length(items)) next
+
+    w <- as_numeric_iea(d[[weight_var]])
+    zone <- as_numeric_iea(d[[zone_var]])
+    repcode <- as_numeric_iea(d[[rep_var]])
+
+    oe <- lapply(d[items], omission_and_eligibility)
+    omit_mat <- do.call(cbind, lapply(oe, `[[`, "omitted"))
+    eligible_mat <- do.call(cbind, lapply(oe, `[[`, "eligible"))
+    colnames(omit_mat) <- items
+    colnames(eligible_mat) <- items
+
+    # Skip variables that appear structurally unavailable in this system.
+    valid_response <- sapply(items, function(v) {
+      x <- d[[v]]
+      oe_v <- omission_and_eligibility(x)
+      sum(oe_v$eligible & !oe_v$omitted, na.rm = TRUE)
+    })
+    administered <- valid_response >= max(20, floor(0.05 * nrow(d)))
+    if (!any(administered)) next
+
+    items2 <- items[administered]
+    rates <- jrr_binary_rates(
+      omit_mat[, administered, drop = FALSE],
+      eligible_mat[, administered, drop = FALSE],
+      w, zone, repcode
+    )
+
+    country_name <- unique(country_as_character(d[[country_var]]))
+    country_name <- country_name[!is.na(country_name) & nzchar(country_name)]
+    country_name <- if (length(country_name)) country_name[1] else basename(f)
+
+    country_outputs[[length(country_outputs) + 1L]] <- tibble(
+      system = country_name,
+      item = items2,
+      rate = rates$rate,
+      se = rates$se
+    )
+  }
+
+  country_tbl <- bind_rows(country_outputs)
+  if (!nrow(country_tbl)) stop("Could not compute ICILS omission rates.")
+
+  # Equal-system average, matching IEA guidance for international averages.
+  pooled <- country_tbl %>%
+    filter(is.finite(rate)) %>%
+    group_by(item) %>%
+    summarise(
+      n_systems = n(),
+      omission_rate = mean(rate, na.rm = TRUE),
+      se = sqrt(sum(se^2, na.rm = TRUE)) / n(),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      position = match(item, master_order),
+      item_label = master_labels[item],
+      lower = pmax(0, omission_rate - 1.96 * se),
+      upper = pmin(1, omission_rate + 1.96 * se)
+    ) %>%
+    arrange(position)
+
+  # Require broad cross-system availability so optional national modules do not
+  # appear as artificial late-questionnaire omission spikes.
+  max_systems <- max(pooled$n_systems, na.rm = TRUE)
+  pooled <- pooled %>% filter(n_systems >= 0.70 * max_systems)
+  pooled$position <- seq_len(nrow(pooled))
+
+  saveRDS(pooled, cache_file)
+  readr::write_csv(pooled, file.path(out_dir, "Figure_S2_omission_by_position.csv"))
+  pooled
+}
+
+s2 <- prepare_icils_omission()
+```
+
+```{r figure-s2, fig.width=10.5, fig.height=6.3}
+p_s2 <- ggplot(s2, aes(x = position, y = omission_rate)) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    fill = "#D9E6F5", alpha = 0.75, colour = NA
+  ) +
+  geom_line(colour = "grey42", linewidth = 0.55, alpha = 0.78) +
+  geom_point(colour = "grey28", size = 1.35, alpha = 0.78) +
+  geom_smooth(
+    method = "loess", se = FALSE,
+    colour = "#2F6BBD", linewidth = 1.15, span = 0.38
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, max(s2$position, na.rm = TRUE), by = 25),
+    expand = expansion(mult = c(0.01, 0.02))
+  ) +
+  scale_y_continuous(
+    labels = percent_format(accuracy = 1),
+    breaks = pretty_breaks(n = 5),
+    expand = expansion(mult = c(0.02, 0.08))
+  ) +
+  labs(
+    title = "Figure S2. Weighted item omission rate by questionnaire position",
+    subtitle = "ICILS 2023 student questionnaire · equal-system average with jackknife 95% confidence bands",
+    x = "Item position in the student questionnaire",
+    y = "Weighted omission rate",
+    caption = "Public-use ICILS 2023 data. Optional or national-only items with limited cross-system availability are excluded."
+  ) +
+  theme(
+    panel.grid.major.x = element_line(colour = "grey93", linewidth = 0.35),
+    panel.grid.major.y = element_line(colour = "grey90", linewidth = 0.4)
+  )
+
+p_s2
+save_figure(p_s2, "Figure_S2_omission_by_position", width = 10.5, height = 6.3)
+```
+
+# Figure S3. Correlation with the full scale score as a function of subset size
+
+```{r figure-s3, fig.width=10.8, fig.height=7.6}
+curve_plot <- curve_all %>%
+  mutate(panel = panel_label(study, scale_var))
+
+p_s3 <- ggplot(curve_plot, aes(x = k, y = validation_r)) +
+  geom_hline(
+    yintercept = CORR_TARGET,
+    linetype = "dashed", colour = "grey38", linewidth = 0.65
+  ) +
+  geom_line(colour = "#2F6BBD", linewidth = 0.9) +
+  geom_point(
+    shape = 21, size = 2.7, stroke = 0.55,
+    fill = "white", colour = "#2F6BBD"
+  ) +
+  facet_wrap(~ panel, scales = "free_x", ncol = 2) +
+  scale_x_continuous(
+    breaks = scales::breaks_pretty(n = 6),
+    expand = expansion(mult = c(0.04, 0.05))
+  ) +
+  scale_y_continuous(
+    breaks = seq(0.75, 1.00, 0.05),
+    labels = number_format(accuracy = 0.01),
+    expand = expansion(mult = c(0.015, 0.025))
+  ) +
+  coord_cartesian(ylim = c(0.75, 1.005), clip = "off") +
+  labs(
+    title = "Figure S3. Recovery of the full scale as item count decreases",
+    subtitle = paste0(
+      "Held-out systems · weighted correlation with the official full scale · dashed line marks r = ",
+      CORR_TARGET
+    ),
+    x = "Number of retained items",
+    y = "Correlation with official full-scale score",
+    caption = "Item ranking and linear equating are estimated in calibration systems only."
+  ) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    strip.background = element_rect(fill = "grey96", colour = NA),
+    strip.text = element_text(face = "bold", lineheight = 1.05)
+  )
+
+p_s3
+save_figure(p_s3, "Figure_S3_correlation_by_subset_size", width = 10.8, height = 7.6)
+```
+
+# Figure S4. Country means from the short form against the full scale in held-out systems
+
+```{r figure-s4-data}
+s4 <- imap_dfr(results, function(res, key) {
+  res$data %>%
+    filter(set == "Validation") %>%
+    group_by(system) %>%
+    summarise(
+      full_mean = weighted_mean(full_scale, weight),
+      short_mean = weighted_mean(short_scale, weight),
+      n = sum(is.finite(full_scale) & is.finite(short_scale)),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      study = res$prep$cfg$study,
+      scale_var = res$prep$cfg$scale_var,
+      scale_name = res$prep$cfg$scale_name
+    )
+})
+readr::write_csv(s4, file.path(out_dir, "Figure_S4_country_means.csv"))
+```
+
+```{r figure-s4, fig.width=10.8, fig.height=7.8}
+s4_plot <- s4 %>%
+  mutate(panel = panel_label(study, scale_var))
+
+p_s4 <- ggplot(s4_plot, aes(x = full_mean, y = short_mean)) +
+  geom_abline(
+    intercept = 0, slope = 1,
+    linetype = "dashed", colour = "grey38", linewidth = 0.7
+  ) +
+  geom_point(
+    shape = 21, size = 3.0, stroke = 0.6,
+    fill = "#2F6BBD", colour = "white", alpha = 0.92
+  ) +
+  facet_wrap(~ panel, scales = "free", ncol = 2) +
+  scale_x_continuous(
+    breaks = scales::breaks_pretty(n = 5),
+    expand = expansion(mult = c(0.06, 0.06))
+  ) +
+  scale_y_continuous(
+    breaks = scales::breaks_pretty(n = 5),
+    expand = expansion(mult = c(0.06, 0.06))
+  ) +
+  labs(
+    title = "Figure S4. Country means from preliminary short forms versus full scales",
+    subtitle = "Held-out validation systems · dashed line indicates perfect recovery",
+    x = "Official full-scale country mean",
+    y = "Preliminary short-form country mean",
+    caption = "Short-form scoring transformation is estimated in calibration systems only."
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "grey96", colour = NA),
+    strip.text = element_text(face = "bold", lineheight = 1.05)
+  )
+
+p_s4
+save_figure(p_s4, "Figure_S4_country_means_short_vs_full", width = 10.8, height = 7.8)
+```
+
+# Figure S5. Per-system differences in country means with replicate-based intervals
+
+```{r figure-s5-data}
+mean_difference_with_jrr <- function(d) {
+  w <- d$weight
+  zone <- d$jkzone
+  repcode <- d$jkrep
+  stat_fun <- function(wr) {
+    weighted_mean(d$short_scale, wr) - weighted_mean(d$full_scale, wr)
+  }
+  est <- jrr_se_scalar(w, zone, repcode, stat_fun)
+  tibble(
+    difference = unname(est["estimate"]),
+    se = unname(est["se"]),
+    lower = difference - 1.96 * se,
+    upper = difference + 1.96 * se
+  )
+}
+
+s5 <- imap_dfr(results, function(res, key) {
+  res$data %>%
+    filter(set == "Validation") %>%
+    group_split(system) %>%
+    map_dfr(function(dd) {
+      tmp <- mean_difference_with_jrr(dd)
+      tmp$system <- unique(dd$system)[1]
+      tmp
+    }) %>%
+    mutate(
+      study = res$prep$cfg$study,
+      scale_var = res$prep$cfg$scale_var,
+      scale_name = res$prep$cfg$scale_name
+    )
+})
+readr::write_csv(s5, file.path(out_dir, "Figure_S5_country_mean_differences.csv"))
+```
+
+```{r figure-s5, fig.width=10, fig.height=21}
+panel_order <- c(
+  "ICCS 2022
+S_CITEFF",
+  "ICILS 2023
+S_LRNINTO",
+  "PIRLS 2021
+ASBGSLR",
+  "TIMSS 2023 Grade 8
+BSBGSLM"
+)
+
+s5_plot <- s5 %>%
+  mutate(
+    panel = factor(panel_label(study, scale_var), levels = panel_order),
+    system_label = pretty_system_id(system)
+  ) %>%
+  arrange(panel, difference) %>%
+  mutate(
+    system_key = paste(system_label, panel, sep = "___"),
+    system_key = factor(system_key, levels = unique(system_key))
+  )
+
+p_s5 <- ggplot(s5_plot, aes(x = difference, y = system_key)) +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dashed", colour = "grey35", linewidth = 0.65
+  ) +
+  geom_segment(
+    aes(x = lower, xend = upper, yend = system_key),
+    linewidth = 0.65, colour = "grey50", lineend = "round"
+  ) +
+  geom_point(
+    shape = 21, size = 2.45, stroke = 0.5,
+    fill = "#2F6BBD", colour = "white"
+  ) +
+  facet_grid(
+    rows = vars(panel),
+    scales = "free_y",
+    space = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(
+    labels = function(x) sub("___.*$", "", x),
+    expand = expansion(add = c(0.55, 0.55))
+  ) +
+  scale_x_continuous(
+    breaks = scales::breaks_pretty(n = 7),
+    expand = expansion(mult = c(0.05, 0.07))
+  ) +
+  labs(
+    title = "Figure S5. Difference between short-form and full-scale country means",
+    subtitle = "Held-out systems · points are weighted mean differences · horizontal bars are JRR 95% intervals",
+    x = "Short-form mean minus full-scale mean",
+    y = NULL,
+    caption = "Intervals use each study's paired-zone jackknife variables. Display labels are shortened only for readability."
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.major.x = element_line(colour = "grey91", linewidth = 0.35),
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(
+      angle = 0, face = "bold", hjust = 1,
+      size = rel(0.94), lineheight = 1.05,
+      margin = margin(r = 10)
+    ),
+    axis.text.y = element_text(size = rel(0.78), lineheight = 0.95),
+    panel.spacing.y = grid::unit(12, "pt"),
+    plot.margin = margin(14, 22, 14, 16)
+  )
+
+p_s5
+save_figure(p_s5, "Figure_S5_country_mean_differences", width = 10, height = 21)
+```
+
+# Figure S6. Paired standardised associations with achievement, short form against full scale
+
+```{r figure-s6-data}
+fisher_average <- function(r) {
+  r <- r[is.finite(r) & abs(r) < 1]
+  if (!length(r)) return(NA_real_)
+  tanh(mean(atanh(r)))
+}
+
+achievement_association <- function(d, score_var, pv_cols) {
+  rs <- vapply(
+    pv_cols,
+    function(pv) weighted_cor(d[[score_var]], d[[pv]], d$weight),
+    numeric(1)
+  )
+  fisher_average(rs)
+}
+
+s6 <- imap_dfr(results, function(res, key) {
+  pv_cols <- res$prep$pv_cols
+  val_dat <- res$data %>% filter(set == "Validation")
+
+  if (!nrow(val_dat)) {
+    stop(res$prep$cfg$study, ": no validation rows are available for Figure S6.")
+  }
+
+  out <- val_dat %>%
+    group_split(system) %>%
+    map_dfr(function(dd) {
+      tibble(
+        system = as.character(unique(dd$system)[1]),
+        full = achievement_association(dd, "full_scale", pv_cols),
+        short = achievement_association(dd, "short_scale", pv_cols)
+      )
+    })
+
+  if (!all(c("system", "full", "short") %in% names(out))) {
+    stop(res$prep$cfg$study, ": Figure S6 could not construct full/short achievement associations.")
+  }
+
+  out %>%
+    mutate(
+      study = res$prep$cfg$study,
+      scale_var = res$prep$cfg$scale_var,
+      scale_name = res$prep$cfg$scale_name,
+      change = short - full
+    )
+})
+readr::write_csv(s6, file.path(out_dir, "Figure_S6_achievement_associations.csv"))
+```
+
+```{r figure-s6, fig.width=10, fig.height=21}
+s6_plot <- s6 %>%
+  mutate(
+    panel = factor(panel_label(study, scale_var), levels = panel_order),
+    system_label = pretty_system_id(system),
+    midpoint = (full + short) / 2
+  ) %>%
+  arrange(panel, midpoint) %>%
+  mutate(
+    system_key = paste(system_label, panel, sep = "___"),
+    system_key = factor(system_key, levels = unique(system_key))
+  )
+
+s6_long <- s6_plot %>%
+  select(panel, system_key, full, short) %>%
+  pivot_longer(
+    c(full, short),
+    names_to = "form",
+    values_to = "association"
+  ) %>%
+  mutate(
+    form = factor(
+      form,
+      levels = c("full", "short"),
+      labels = c("Full scale", "Short form")
+    )
+  )
+
+p_s6 <- ggplot() +
+  geom_vline(
+    xintercept = 0,
+    colour = "grey88", linewidth = 0.45
+  ) +
+  geom_segment(
+    data = s6_plot,
+    aes(x = full, xend = short, y = system_key, yend = system_key),
+    linewidth = 0.75, colour = "grey62", lineend = "round"
+  ) +
+  geom_point(
+    data = s6_long,
+    aes(x = association, y = system_key, shape = form, fill = form),
+    size = 2.7, stroke = 0.7, colour = "#2F6BBD"
+  ) +
+  facet_grid(
+    rows = vars(panel),
+    scales = "free_y",
+    space = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(
+    labels = function(x) sub("___.*$", "", x),
+    expand = expansion(add = c(0.55, 0.55))
+  ) +
+  scale_shape_manual(values = c(21, 21), name = NULL) +
+  scale_fill_manual(
+    values = c("Full scale" = "white", "Short form" = "#2F6BBD"),
+    name = NULL
+  ) +
+  scale_x_continuous(
+    breaks = scales::breaks_pretty(n = 7),
+    expand = expansion(mult = c(0.06, 0.07))
+  ) +
+  labs(
+    title = "Figure S6. Achievement association before and after preliminary scale reduction",
+    subtitle = "Held-out systems · weighted correlations averaged across five plausible values",
+    x = "Standardized association with achievement",
+    y = NULL,
+    caption = "The five plausible-value-specific correlations are combined on the Fisher-z scale. Display labels are shortened only for readability."
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.major.x = element_line(colour = "grey91", linewidth = 0.35),
+    legend.position = "top",
+    legend.justification = "left",
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(
+      angle = 0, face = "bold", hjust = 1,
+      size = rel(0.94), lineheight = 1.05,
+      margin = margin(r = 10)
+    ),
+    axis.text.y = element_text(size = rel(0.78), lineheight = 0.95),
+    panel.spacing.y = grid::unit(12, "pt"),
+    plot.margin = margin(14, 22, 14, 16)
+  )
+
+p_s6
+save_figure(p_s6, "Figure_S6_achievement_associations", width = 10, height = 21)
+```
+
+# Preliminary numerical summary for the application text
+
+```{r summary-results}
+summary_results <- imap_dfr(results, function(res, key) {
+  cfg <- res$prep$cfg
+  s5_this <- s5 %>% filter(study == cfg$study, scale_var == cfg$scale_var)
+  s6_this <- s6 %>% filter(study == cfg$study, scale_var == cfg$scale_var)
+
+  tibble(
+    Study = cfg$study,
+    Scale = cfg$scale_var,
+    Full_items = length(res$prep$item_cols),
+    Short_items = res$selected_k,
+    Reduction_pct = 100 * (1 - res$selected_k / length(res$prep$item_cols)),
+    Heldout_individual_r = res$validation_r,
+    Mean_abs_country_mean_difference = mean(abs(s5_this$difference), na.rm = TRUE),
+    Max_abs_country_mean_difference = max(abs(s5_this$difference), na.rm = TRUE),
+    Mean_abs_change_in_achievement_association = mean(abs(s6_this$change), na.rm = TRUE),
+    Max_abs_change_in_achievement_association = max(abs(s6_this$change), na.rm = TRUE)
+  )
+})
+
+readr::write_csv(summary_results, file.path(out_dir, "Preliminary_results_summary.csv"))
+knitr::kable(summary_results, digits = 3,
+             caption = "Preliminary validation summary for the four demonstration scales.")
+```
+
+# Suggested sentences generated from the observed results
+
+```{r text-snippets, results='asis'}
+# These lines do not invent results: they are assembled only after the analysis
+# above has run. Review the wording before inserting it into the application.
+
+best_reduction <- summary_results %>%
+  filter(is.finite(Reduction_pct)) %>%
+  summarise(
+    median_reduction = median(Reduction_pct, na.rm = TRUE),
+    min_reduction = min(Reduction_pct, na.rm = TRUE),
+    max_reduction = max(Reduction_pct, na.rm = TRUE)
+  )
+
+cat("**Potential-impact result sentence:**  \\n")
+cat(sprintf(
+  "Across the four preliminary demonstration scales, the median item reduction was %.1f%% (range %.1f%% to %.1f%%) while the selected forms were evaluated in held-out education systems (Table S1 and Figures S3-S6).  \\n\\n",
+  best_reduction$median_reduction,
+  best_reduction$min_reduction,
+  best_reduction$max_reduction
+))
+
+if (nrow(s2)) {
+  fit_pos <- lm(omission_rate ~ position, data = s2, weights = pmax(n_systems, 1))
+  slope100 <- 100 * unname(coef(fit_pos)["position"])
+  cat("**Questionnaire-position result sentence:**  \\n")
+  cat(sprintf(
+    "In ICILS 2023, weighted item omission changed by %.3f percentage points per questionnaire position in the preliminary linear trend, with the item-level pattern and jackknife confidence bands shown in Figure S2.  \\n",
+    slope100
+  ))
+}
+```
+
+# Files created
+
+```{r output-manifest}
+manifest <- list.files(out_dir, full.names = FALSE)
+cat(paste("-", manifest), sep = "\n")
+```
+
+## Figure formatting note
+
+Figures S2-S6 use a white publication background and are exported as both 320-dpi PNG and vector PDF files. Figures S5 and S6 are intentionally tall, with study panels stacked vertically and panel height allocated in proportion to the number of held-out systems. Country-file identifiers are shortened only for display (for example, `BSGUSAI3` becomes `USA`); the underlying analysis data and exported CSV files are unchanged.
+
+## Method note
+
+The short forms in these preliminary analyses are not presented as final recommended instruments. They are used to establish that the proposed validation framework can be run across the four public-use IEA databases and to quantify how much information is lost as items are removed. The funded project would replace the simple calibration ranking used here with the pre-registered constrained optimisation procedure, content-facet rules, cross-system comparability constraint and trend-item requirements specified in the proposal.
