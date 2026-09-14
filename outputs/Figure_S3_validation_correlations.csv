@@ -1,0 +1,27 @@
+study,scale_var,scale_name,k,n_full_items,validation_r
+ICILS 2023,S_LRNINTO,Learning about internet-related tasks outside school,2,6,0.8015012082252422
+ICILS 2023,S_LRNINTO,Learning about internet-related tasks outside school,3,6,0.8578223546559389
+ICILS 2023,S_LRNINTO,Learning about internet-related tasks outside school,4,6,0.9130377352326099
+ICILS 2023,S_LRNINTO,Learning about internet-related tasks outside school,5,6,0.9303744726511635
+ICILS 2023,S_LRNINTO,Learning about internet-related tasks outside school,6,6,0.9505641256904211
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,2,7,0.9380308286917044
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,3,7,0.9547456877203507
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,4,7,0.9643555898321249
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,5,7,0.9741487682327415
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,6,7,0.9831174422568237
+TIMSS 2023 Grade 8,BSBGSLM,Students Like Learning Mathematics,7,7,0.9909281806950154
+PIRLS 2021,ASBGSLR,Students Like Reading,2,10,0.792689779389345
+PIRLS 2021,ASBGSLR,Students Like Reading,3,10,0.8225363186419952
+PIRLS 2021,ASBGSLR,Students Like Reading,4,10,0.8545638717195663
+PIRLS 2021,ASBGSLR,Students Like Reading,5,10,0.8671249327131182
+PIRLS 2021,ASBGSLR,Students Like Reading,6,10,0.8911527441349925
+PIRLS 2021,ASBGSLR,Students Like Reading,7,10,0.9059307734476955
+PIRLS 2021,ASBGSLR,Students Like Reading,8,10,0.9167090509725156
+PIRLS 2021,ASBGSLR,Students Like Reading,9,10,0.9189663304421329
+PIRLS 2021,ASBGSLR,Students Like Reading,10,10,0.9324809763766834
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,2,7,0.8753190074880906
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,3,7,0.9205649359892841
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,4,7,0.9376486188015302
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,5,7,0.9608513181058946
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,6,7,0.9722198349884963
+ICCS 2022,S_CITEFF,Students' Citizenship Self-Efficacy,7,7,0.9846784016958774

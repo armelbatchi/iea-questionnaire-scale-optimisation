@@ -1,0 +1,5 @@
+Study,Respondent,Scale variable,Scale,Full items,Preliminary short items,Items removed,Reduction (%),Held-out r,Selected source items
+ICILS 2023,Student,S_LRNINTO,Learning about internet-related tasks outside school,6,6,0,0,0.9505641256904211,"IS3G20AC2, IS3G20AB2, IS3G20AD2, IS3G20AF2, IS3G20AA2, IS3G20AE2"
+TIMSS 2023 Grade 8,Student,BSBGSLM,Students Like Learning Mathematics,7,3,4,57.14285714285714,0.9547456877203507,"BSBM19E, BSBM19G, BSBM19A"
+PIRLS 2021,Student,ASBGSLR,Students Like Reading,10,10,0,0,0.9324809763766834,"ASBR07E, ASBR07D, ASBR07B, ASBR07G, ASBR07F, ASBR06A, ASBR06B, ASBR07A, ASBR07H, ASBR07C"
+ICCS 2022,Student,S_CITEFF,Students' Citizenship Self-Efficacy,7,5,2,28.57142857142857,0.9608513181058946,"IS4G29B, IS4G29D, IS4G29F, IS4G29C, IS4G29G"

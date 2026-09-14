@@ -1,0 +1,126 @@
+item,n_systems,omission_rate,se,position,item_label,lower,upper
+IS3G02,35,0.006404395003506918,3.01382144262692e-4,1,About You/What is your gender,0.005813686000752042,0.006995104006261794
+IS3G03,35,0.0211220058777663,0.001078132392008346,2,About You/What is the highest level of education you expect to complete,0.019008866389429942,0.023235145366102657
+IS3G04A,35,0.047453858211580366,0.001217241530976227,3,Your Home and Your Family/In what country were you and your parents born/You,0.04506806481086696,0.04983965161229377
+IS3G04B,35,0.06252905006792195,0.0013021745348321706,4,Your Home and Your Family/In what country were you and your parents born/[parent or guardian 1],0.05997678797965089,0.065081312156193
+IS3G04C,35,0.06336772181285683,0.0013193079153950029,5,Your Home and Your Family/In what country were you and your parents born/[parent or guardian 2],0.06078187829868262,0.06595356532703103
+IS3G05,35,0.013807306116696708,0.001050150168335884,6,Your Home and Your Family/What language do you speak at home most of the time,0.011749011786758376,0.015865600446635042
+IS3G06,35,0.009981773536407355,3.7247762999611904e-4,7,Your Home and Your Family/Does your [parent or guardian 1] work in a paid job,0.009251717381614961,0.01071182969119975
+IS3G09,35,0.05648230378354989,0.0013630817590710113,8,Your Home and Your Family/What is the highest level of education completed by your [parent or guardian 1],0.05381066353577071,0.05915394403132907
+IS3G10,35,0.021127550047690225,5.528075398606274e-4,9,Your Home and Your Family/Does your [parent or guardian 2] work in a paid [job],0.020044047269563395,0.022211052825817056
+IS3G13,35,0.07467833375309847,0.0014776769855085346,10,Your Home and Your Family/What is the highest level of education completed by your [parent or guardian 2],0.07178208686150174,0.0775745806446952
+IS3G14,35,0.01260346693493423,5.314010237541345e-4,11,Your Home and Your Family/About how many books are there in your home,0.011561920928376126,0.013645012941492334
+IS3G15A,34,0.024602625750350805,6.759221320599726e-4,12,Your Home and Your Family/Quality of home internet connection/Drop out,0.02327781837151326,0.02592743312918835
+IS3G15B,35,0.05589094190138074,0.0010020942303555261,13,Your Home and Your Family/Quality of home internet connection/Slow,0.05392683720988391,0.057855046592877574
+IS3G16AA,35,0.02844175356958615,7.07036256399188e-4,14,Your Home and Your Family/How many ICT devices are currently used in your home/Desktop or laptop computers,0.02705596250704374,0.02982754463212856
+IS3G16AB,35,0.05042004138637887,8.96862816322906e-4,15,Your Home and Your Family/How many ICT devices are currently used in your home/Tablet devices,0.04866219026638598,0.05217789250637177
+IS3G16BA,35,0.030350623637371177,7.627410334398167e-4,16,Your Home and Your Family/Can you acces the following ICT devices at home for schoolwork/Desktop or laptop computers,0.028855651211829137,0.03184559606291322
+IS3G16BB,35,0.054634912243608454,9.420505088775575e-4,17,Your Home and Your Family/Can you acces the following ICT devices at home for schoolwork/Tablet devices,0.05278849324620844,0.056481331241008466
+IS3G16BC,35,0.03831539704463363,8.669584367691453e-4,18,Your Home and Your Family/Can you acces the following ICT devices at home for schoolwork/[Smartphone],0.03661615850856611,0.040014635580701154
+IS3G17,35,0.017675577986992458,6.45872436955873e-4,19,Your General Use of ICT/How long have you been using computers,0.01640966801055895,0.018941487963425967
+IS3G18A,35,0.03686344485469344,9.073537817262304e-4,20,Your General Use of ICT/How often do you use ICT/On school days/At school for schoolwork,0.03508503144251003,0.038641858266876855
+IS3G18B,35,0.06583536904031602,0.0011568951180406016,21,Your General Use of ICT/How often do you use ICT/On school days/At school for other purposes,0.06356785460895643,0.0681028834716756
+IS3G18C,35,0.11491775232146594,0.0014060275908381558,22,Your General Use of ICT/How often do you use ICT/On school days/Outside of school for schoolwork,0.11216193824342315,0.11767356639950872
+IS3G18D,35,0.11576409846848502,0.0014259392505772028,23,Your General Use of ICT/How often do you use ICT/On school days/Outside of school for other purposes,0.1129692575373537,0.11855893939961634
+IS3G18E,35,0.05972305125623753,0.0010953762427802934,24,Your General Use of ICT/How often do you use ICT/On non-school days/Outside of school for schoolwork,0.05757611382038816,0.0618699886920869
+IS3G18F,35,0.07024623945292151,0.0011954080133084045,25,Your General Use of ICT/How often do you use ICT/On non-school days/Outside of school for other purposes,0.06790323974683704,0.07258923915900597
+IS3G19A,32,0.10590226705452543,0.001281711873742335,26,Your General Use of ICT/Parents or guardians place limit on the amount of screen time/On school days,0.10339011178199045,0.10841442232706042
+IS3G19B,32,0.14949912897927142,0.0014638145163519368,27,Your General Use of ICT/Parents or guardians place limit on the amount of screen time/On non-school days,0.14663005252722164,0.1523682054313212
+IS3G20AA1,35,0.08800171457690951,0.0013514611451593943,28,Your General Use of ICT/Learned tasks/At school/Use the Internet to find information,0.0853528507323971,0.09065057842142193
+IS3G20AA2,35,0.08009216031194816,0.001387205057239293,29,Your General Use of ICT/Learned tasks/Outside of school/Use the Internet to find information,0.07737323839975914,0.08281108222413718
+IS3G20AB1,35,0.0996775267385532,0.0014436556025104001,30,Your General Use of ICT/Learned tasks/At school/Refine Internet searches,0.09684796175763281,0.10250709171947357
+IS3G20AB2,35,0.09345728290376909,0.0014621250854629378,31,Your General Use of ICT/Outside of school/Refine Internet searches,0.09059151773626173,0.09632304807127645
+IS3G20AC1,35,0.10325151830336528,0.0014843593078972045,32,Your General Use of ICT/Learned tasks/At school/Evaluate the reliability of information on the internet,0.10034217405988675,0.1061608625468438
+IS3G20AC2,35,0.10526464717712254,0.0015137923522965148,33,Your General Use of ICT/Learned tasks/Outside of school/Evaluate the reliability of information on the Internet,0.10229761416662138,0.1082316801876237
+IS3G20AD1,35,0.1126865179500066,0.0015356544352429192,34,Your General Use of ICT/Learned tasks/At school/Include accurate references to Internet sources,0.10967663525693049,0.11569640064308272
+IS3G20AD2,35,0.11665357529483562,0.0016013498472219664,35,Your General Use of ICT/Learned tasks/Outside of school/Include accurate references to Internet sources,0.11351492959428057,0.11979222099539068
+IS3G20AE1,35,0.11703125020639223,0.001567194863175988,36,Your General Use of ICT/Learned tasks/At school/Judge whether a message from someone is a scam,0.1139595482745673,0.12010295213821716
+IS3G20AE2,35,0.10726127793488226,0.0015431578217817094,37,Your General Use of ICT/Learned tasks/Outside of school/Judge whether a message from someone is a scam,0.10423668860419011,0.1102858672655744
+IS3G20AF1,35,0.12126076834277673,0.001580022872734843,38,Your General Use of ICT/Learned tasks/At school/Manage privacy settings for Internet accounts and ICT devices,0.11816392351221644,0.12435761317333702
+IS3G20AF2,35,0.11113226078283517,0.001570251969720571,39,Your General Use of ICT/Learned tasks/Outside of school/Manage privacy settings for Internet accounts and ICT devices,0.10805456692218285,0.11420995464348749
+IS3G20BA1,35,0.10206976181509937,0.0016437511122054246,40,Your General Use of ICT/Learned tasks/At school/Organize files,0.09884800963517675,0.105291513995022
+IS3G20BA2,35,0.1137150652116502,0.0016531464045208037,41,Your General Use of ICT/Learned tasks/Outside of school/Organize files,0.11047489825878942,0.11695523216451098
+IS3G20BB1,35,0.10709759977328656,0.0016504544460534663,42,Your General Use of ICT/Learned tasks/At school/Edit the layout and formatting of documents,0.10386270905902177,0.11033249048755135
+IS3G20BB2,35,0.11821250064958946,0.0016925688180597352,43,Your General Use of ICT/Learned tasks/Outside of school/Edit the layout and formatting of documents,0.11489506576619238,0.12152993553298655
+IS3G20BC1,35,0.11639320483147038,0.0016684626920189284,44,Your General Use of ICT/Learned tasks/At school/Edit digital media files,0.11312301795511327,0.11966339170782749
+IS3G20BC2,35,0.11394957735937834,0.0016911439071165026,45,Your General Use of ICT/Learned tasks/Outside of school/Edit digital media files,0.11063493530143,0.11726421941732669
+IS3G20BD1,35,0.11439780421983993,0.001684518615664209,46,Your General Use of ICT/Learned tasks/At school/Complete calculations using a spreadsheet,0.11109614773313808,0.11769946070654178
+IS3G20BD2,35,0.12793466366474596,0.001746818782491151,47,Your General Use of ICT/Learned tasks/Outside of school/Complete calculations using a spreadsheet,0.1245108988510633,0.1313584284784286
+IS3G20BE1,35,0.11286387364340784,0.0016798149935154558,48,Your General Use of ICT/Learned tasks/At school/Create computer programs using a visual programming editor,0.10957143625611755,0.11615631103069814
+IS3G20BE2,35,0.12648126497226816,0.0017469473561208674,49,Your General Use of ICT/Learned tasks/Outside of school/Create computer programs using a visual programming editor,0.12305724815427127,0.12990528179026506
+IS3G20BF1,35,0.1169500950115778,0.0016981884291870526,50,Your General Use of ICT/Learned tasks/At school/Write computer programs using a text-based programming language,0.11362164569037117,0.12027854433278443
+IS3G20BF2,35,0.13045072664892515,0.0017503078391884511,51,Your General Use of ICT/Learned tasks/Outside of school/Write computer programs using a text-based programming language,0.1270201232841158,0.1338813300137345
+IS3G20CA,35,0.04038340103318584,0.0010461181555346637,52,Your General Use of ICT/Learned topics at school/Responsible and respectful use of social media,0.0383330094483379,0.04243379261803378
+IS3G20CB,35,0.05086154148510993,0.0011774041598484886,53,Your General Use of ICT/Learned topics at school/How to recognize cyberbullying,0.04855382933180689,0.05316925363841297
+IS3G20CC,35,0.062392156350718965,0.0012445853095746039,54,Your General Use of ICT/Learned topics at school/How to report cyberbullying,0.05995276914395274,0.06483154355748519
+IS3G20CD,35,0.05854114989898139,0.0012245565316853038,55,Your General Use of ICT/Learned topics at school/Physical health and ICT use,0.05614101909687819,0.06094128070108459
+IS3G20CE,35,0.05945982372630996,0.00125187703133831,56,Your General Use of ICT/Learned topics at school/Psychological health and ICT use,0.05700614474488687,0.06191350270773305
+IS3G21A,35,0.04664371219702338,0.001151843012645706,57,Your Experience of Using ICT/Outside of school/Text chat with others,0.044386099892237796,0.048901324501808965
+IS3G21B,35,0.050952039608654735,0.0012112447563382782,58,Your Experience of Using ICT/Outside of school/Use social media to or view post content,0.04857799988623171,0.05332607933107776
+IS3G21C,35,0.0582651957837928,0.0012595904526290288,59,Your Experience of Using ICT/Outside of school/Check social media,0.05579639849663991,0.060733993070945694
+IS3G21D,35,0.05905856273897281,0.0012735991473566653,60,Your Experience of Using ICT/Outside of school/Use the Internet to find information,0.05656230841015374,0.061554817067791874
+IS3G21E,35,0.05788905876972035,0.001265550542648163,61,"Your Experience of Using ICT/Outside of school/Watch online videos, live streams or television",0.05540857970612995,0.06036953783331075
+IS3G21F,35,0.06082917253846625,0.001292067161203173,62,Your Experience of Using ICT/Outside of school/Listen to music or the radio,0.05829672090250803,0.06336162417442447
+IS3G22A,35,0.05585137452164634,0.0012413766705463816,63,Your Experience of Using ICT/How often use ICT in lessons/[Language arts: test language],0.05341827624737543,0.058284472795917246
+IS3G22B,35,0.061816005338442385,0.0012843708916241486,64,Your Experience of Using ICT/How often use ICT in lessons/[Language arts: other national languages],0.059298638390859054,0.06433337228602572
+IS3G22C,35,0.07176783458065367,0.0013512863020107271,65,Your Experience of Using ICT/How often use ICT in your lessons/Mathematics,0.06911931342871264,0.0744163557325947
+IS3G22D,35,0.06841866401275033,0.0013310266400182323,66,Your Experience of Using ICT/How often use ICT in your lessons/Sciences,0.0658098517983146,0.07102747622718607
+IS3G22E,35,0.07027180689367359,0.0013592094913973598,67,Your Experience of Using ICT/How often use ICT in your lessons/Human sciences,0.06760775629053475,0.07293585749681242
+IS3G22F,35,0.06651026230310657,0.001335138472621763,68,Your Experience of Using ICT/How often use ICT in your lessons/Creative arts,0.06389339089676792,0.06912713370944522
+IS3G22G,33,0.07398168426591904,0.0014154183499848407,69,Your Experience of Using ICT/How often use ICT in your lessons/[Information technology],0.07120746429994876,0.07675590423188933
+IS3G22H,31,0.0731904214220969,0.0014553301637938052,70,Your Experience of Using ICT/How often use ICT in your lessons/Practical or vocational,0.07033797430106105,0.07604286854313276
+IS3G22I,35,0.07165123477673749,0.0013674301742746357,71,Your Experience of Using ICT/How often use ICT in your lessons/Other,0.0689710716351592,0.07433139791831578
+IS3G23A,35,0.06619226591479628,0.0013934731105623968,72,Your Experience of Using ICT/How often use tools during lessons/Word-processing software,0.06346105861809398,0.06892347321149858
+IS3G23B,35,0.07687524535497672,0.0014251743754731551,73,Your Experience of Using ICT/How often use tools during lessons/Presentation software,0.07408190357904934,0.0796685871309041
+IS3G23C,35,0.08586917840819965,0.001487152960451932,74,Your Experience of Using ICT/How often use tools during lessons/Spreadsheets,0.08295435860571386,0.08878399821068543
+IS3G23D,35,0.0936864582989975,0.0015477298786967183,75,Your Experience of Using ICT/How often use tools during lessons/Multimedia production tools,0.09065290773675193,0.09672000886124306
+IS3G23E,35,0.10080118429803257,0.0015670665358902707,76,Your Experience of Using ICT/How often use tools during lessons/Concept mapping software,0.09772973388768764,0.1038726347083775
+IS3G23F,35,0.09794021952340685,0.0015810317567812873,77,Your Experience of Using ICT/How often use tools during lessons/Tools that capture real-world data,0.09484139728011554,0.10103904176669817
+IS3G23G,35,0.1042846437432277,0.001607618100777433,78,Your Experience of Using ICT/How often use tools during lessons/Simulations and modelling software,0.10113371226570393,0.10743557522075146
+IS3G23H,35,0.09132267660121678,0.001585803316381986,79,Your Experience of Using ICT/How often use tools during lessons/Computer-based information resources,0.08821450210110808,0.09443085110132547
+IS3G23I,35,0.0996004329737776,0.0015926191226175999,80,Your Experience of Using ICT/How often use tools during lessons/Interactive digital learning resources,0.09647889949344711,0.1027219664541081
+IS3G23J,35,0.09394620556442297,0.0015871014047049363,81,Your Experience of Using ICT/How often use tools during lessons/Drawing and graphic design software,0.0908354868112013,0.09705692431764465
+IS3G23K,35,0.09532441725897645,0.001579548904786281,82,Your Experience of Using ICT/How often use tools during lessons/A learning management system,0.09222850140559534,0.09842033311235755
+IS3G23L,35,0.09300244102476517,0.001607469148586373,83,Your Experience of Using ICT/How often use tools during lessons/A video conferencing system,0.08985180149353587,0.09615308055599446
+IS3G23M,35,0.09494074407604029,0.0016195076623124612,84,Your Experience of Using ICT/How often use tools during lessons/A computer programming,0.09176650905790787,0.09811497909417272
+IS3G24A,35,0.07229113317031179,0.0014448992993223054,85,Your Thoughts About Using ICT/How well can you do/Edit digital photographs or other graphic images,0.06945913054364007,0.0751231357969835
+IS3G24B,35,0.07908362510207663,0.001512817302389547,86,Your Thoughts About Using ICT/How well can you do/Write or edit text for a school assignment,0.07611850318939312,0.08204874701476014
+IS3G24C,35,0.08549328349614368,0.0015296776602742878,87,Your Thoughts About Using ICT/How well can you do/Search for relevant information for a school project on the Internet,0.08249511528200608,0.08849145171028129
+IS3G24D,35,0.08631670362956467,0.001557614980040104,88,Your Thoughts About Using ICT/How well can you do/Build or edit a webpage,0.08326377826868607,0.08936962899044328
+IS3G24E,35,0.1061075172775428,0.001672431485144185,89,Your Thoughts About Using ICT/How well can you do/Change the settings on a device to suit your needs and preferences,0.10282955156666021,0.1093854829884254
+IS3G24F,35,0.09842791034766717,0.0016649623018919664,90,Your Thoughts About Using ICT/How well can you do/Create a multi-media presentation,0.09516458423595892,0.10169123645937542
+IS3G24G,35,0.09965969765345987,0.0016762760315454704,91,"Your Thoughts About Using ICT/How well can you do/Upload text, images, or video to an online profile",0.09637419663163076,0.10294519867528899
+IS3G24H,35,0.09670242511198496,0.0016508289520302405,92,Your Thoughts About Using ICT/How well can you do/Insert an image into a document or message,0.09346680036600569,0.09993804985796423
+IS3G24I,35,0.09264748678831594,0.0015998274688571372,93,Your Thoughts About Using ICT/How well can you do/Install a program or app,0.08951182494935596,0.09578314862727592
+IS3G24J,35,0.09459135976948296,0.001653747377103541,94,Your Thoughts About Using ICT/How well can you do/Judge whether you can trust information,0.09135001491036002,0.09783270462860591
+IS3G24K,35,0.0915481179887898,0.001639610895612898,95,Your Thoughts About Using ICT/How well can you do/Use a text-based programming language,0.08833448063338852,0.09476175534419108
+IS3G24L,35,0.09351622347891912,0.0016656277877224244,96,Your Thoughts About Using ICT/How well can you do/Use visual coding,0.09025159301498317,0.09678085394285507
+IS3G24M,35,0.09684127253297797,0.0016721691380744547,97,Your Thoughts About Using ICT/How well can you do/Find the original sources of information,0.09356382102235204,0.1001187240436039
+IS3G25AA,35,0.0865009887271102,0.0016067823485426869,98,Your Thoughts About Using ICT/Agree or disagree about ICT and society/Advances in ICT usually improve living conditions,0.08335169532396654,0.08965028213025387
+IS3G25AB,35,0.09232498542317477,0.0016401579608766293,99,Your Thoughts About Using ICT/Agree or disagree about ICT and society/ICT helps us to understand the world better,0.08911027581985657,0.09553969502649297
+IS3G25AC,35,0.09984043215823508,0.0017136871799180121,100,Your Thoughts About Using ICT/Agree or disagree about ICT and society/Using ICT makes people more isolated in society,0.09648160528559578,0.10319925903087439
+IS3G25AD,35,0.10260268430938954,0.0017155169794980983,101,Your Thoughts About Using ICT/Agree or disagree about ICT and society/With more ICT there will be fewer jobs,0.09924027102957327,0.10596509758920582
+IS3G25AE,35,0.10222606414833037,0.001747865935925675,102,Your Thoughts About Using ICT/Agree or disagree about ICT and society/People spend far too much time using ICT,0.09880024691391605,0.10565188138274469
+IS3G25AF,35,0.10249830480502654,0.001729944483959474,103,Your Thoughts About Using ICT/Agree or disagree about ICT and society/ICT is valuable to society,0.09910761361646597,0.10588899599358712
+IS3G25AG,35,0.1031136314799747,0.0017431437266519337,104,Your Thoughts About Using ICT/Agree or disagree about ICT and society/Advances in ICT bring many social benefits,0.0996970697757369,0.10653019318421249
+IS3G25AH,35,0.10128679472960925,0.0017275686253630522,105,Your Thoughts About Using ICT/Agree or disagree about ICT and society/Using ICT may be dangerous for people's health,0.09790076022389767,0.10467282923532083
+IS3G25BA,35,0.0961972371293333,0.0017257026719002483,106,Your Thoughts About Using ICT/Agree or disagree about ICT and school/Learn better when I use ICT in my lessons,0.09281485989240881,0.09957961436625778
+IS3G25BB,35,0.10263698836769171,0.0017698189679723516,107,Your Thoughts About Using ICT/Agree or disagree about ICT and school/Using ICT at school makes learning more fun,0.0991681431904659,0.10610583354491752
+IS3G25BC,35,0.10726599078740635,0.0018067300053426708,108,Your Thoughts About Using ICT/Agree or disagree about ICT and school/I would like to study ICT subjects,0.10372479997693472,0.11080718159787799
+IS3G25BD,35,0.11721218837187637,0.001876981185197318,109,Your Thoughts About Using ICT/Agree or disagree about ICT and school/I hope that ICT is a very important part of my job,0.11353330524888963,0.12089107149486311
+IS3G25BE,35,0.11553132034382507,0.0018430893864171155,110,Your Thoughts About Using ICT/Agree or disagree about ICT and school/I hope that my future job involves programming,0.11191886514644753,0.11914377554120262
+IS3G25BF,35,0.11338803837341872,0.0018865626081009169,111,Your Thoughts About Using ICT/Agree or disagree about ICT and school/Learning how to use ICT applications will help me,0.10969037566154093,0.11708570108529652
+IS3G25BG,35,0.11230626198860659,0.0018415125113313319,112,Your Thoughts About Using ICT/Agree or disagree about ICT and school/It is important for students to learn ICT at school,0.10869689746639719,0.115915626510816
+IS3G25BH,35,0.11264268461470836,0.0018784113321559548,113,Your Thoughts About Using ICT/Agree or disagree about ICT and school/Learning how to use ICT well will help me get a job,0.10896099840368269,0.11632437082573403
+IS3G25BI,35,0.11306461625714267,0.001852229944081702,114,Your Thoughts About Using ICT/Agree or disagree about ICT and school/It is important for students to learn programming,0.10943424556674254,0.11669498694754281
+IS3G25BJ,35,0.11833128050962798,0.0018795767275719434,115,Your Thoughts About Using ICT/Agree or disagree about ICT and school/It is important to keep up with changes in ICT,0.11464731012358696,0.12201525089566899
+IS3G26A,35,0.11177538614199695,0.0018136654370191777,116,Your Thoughts About Using ICT/Extent of learned tasks/Use a solution to help solve a different problem,0.10822060188543936,0.11533017039855453
+IS3G26B,35,0.1183213215438652,0.0018635359602912095,117,Your Thoughts About Using ICT/Extent of learned tasks/Solve a hard problem by splitting it into a few easier problems,0.11466879106169442,0.12197385202603597
+IS3G26C,35,0.12791951257619674,0.001931752521102398,118,Your Thoughts About Using ICT/Extent of learned tasks/Make diagrams that explain concepts or systems,0.12413327763483605,0.13170574751755745
+IS3G26D,35,0.1344763196615603,0.0019479676342813782,119,Your Thoughts About Using ICT/Extent of learned tasks/Plan tasks by setting out the steps needed to complete them,0.1306583030983688,0.1382943362247518
+IS3G26E,35,0.1381720846563498,0.001956601831253583,120,Your Thoughts About Using ICT/Extent of learned tasks/Detect patterns in data,0.1343371450670928,0.14200702424560682
+IS3G26F,35,0.12785835111216998,0.0019252043185056394,121,Your Thoughts About Using ICT/Extent of learned tasks/Use simulations to help understand concepts or systems,0.12408495064789893,0.13163175157644103
+IS3G26G,35,0.12824993264947507,0.001917259234221848,122,Your Thoughts About Using ICT/Extent of learned tasks/Make flow diagrams to show how a computer program should work,0.12449210455040025,0.1320077607485499
+IS3G26H,35,0.12999428299146934,0.0019207741567661084,123,"Your Thoughts About Using ICT/Extent of learned tasks/Systematically test computer programs to find bugs, errors",0.12622956564420776,0.13375900033873092
+IS3G26I,35,0.13365412173950433,0.0019273729853671706,124,Your Thoughts About Using ICT/Extent of learned tasks/Use data to better understand real-world problems,0.12987647068818467,0.137431772790824
+IS3G27,34,0.0627798063586065,0.0014194765535356937,125,"Your Thoughts About Using ICT/Do you study [computing, computer science, information technology, informatics or similar]",0.05999763231367654,0.06556198040353646
